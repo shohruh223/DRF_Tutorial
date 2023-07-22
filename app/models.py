@@ -1,46 +1,45 @@
-from django.contrib.auth.base_user import BaseUserManager
-from django.contrib.auth.models import AbstractUser
-from django.core.validators import integer_validator
 from django.db import models
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
+from django.utils import timezone
 
 
-class UserManager(BaseUserManager):
+class CustomUserManager(BaseUserManager):
     def create_user(self, email, password=None, **extra_fields):
         if not email:
-            raise ValueError('Users must have a phone number!')
+            raise ValueError('Email address must be set')
+
+        email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
     def create_superuser(self, email, password=None, **extra_fields):
-        user = self.create_user(email, password, **extra_fields)
-        user.is_staff = True
-        user.is_superuser = True
-        user.save(using=self._db)
-        return user
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+
+        if extra_fields.get('is_staff') is not True:
+            raise ValueError('Superuser must have is_staff=True')
+        if extra_fields.get('is_superuser') is not True:
+            raise ValueError('Superuser must have is_superuser=True')
+
+        return self.create_user(email, password, **extra_fields)
 
 
-class User(AbstractUser):
-    username = models.CharField(max_length=155, unique=False)
+class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(unique=True)
-    phone_number = models.CharField(max_length=25, validators=[integer_validator], null=True, blank=True)
-    address = models.CharField(max_length=155, null=True, blank=True)
-    # forget_password_token = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=False)
+    is_staff = models.BooleanField(default=False)
+    verification_code = models.CharField(max_length=6)
+    activation_key_expires = models.DateTimeField(blank=True, null=True)
+
+    objects = CustomUserManager()
 
     USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
-    objects = UserManager()
 
+    def save(self, *args, **kwargs):
+        # Aktivatsiya muddatini offset-naive qilamiz
+        if self.activation_key_expires:
+            self.activation_key_expires = timezone.make_naive(self.activation_key_expires)
 
-class Product(models.Model):
-    title = models.CharField(max_length=155)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.TextField(null=True, blank=True)
-    user = models.ForeignKey(to='app.User',
-                             on_delete=models.CASCADE,
-                             related_name='products')
-
-    def __str__(self):
-        return self.title
-
+        super().save(*args, **kwargs)
