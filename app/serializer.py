@@ -1,6 +1,27 @@
+from django.contrib.auth.hashers import make_password
 from rest_framework import serializers
+from app.models import User
 
 
-class SMSRequestSerializer(serializers.Serializer):
-    to_number = serializers.CharField(max_length=15)
-    message = serializers.CharField(max_length=160)
+class RegisterUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['phone_number', 'password']
+        extra_kwargs = {'password': {'write_only': True}}
+
+    def create(self, validated_data):
+        # Parolni xashlash
+        password = validated_data.pop('password')
+        hashed_password = make_password(password)
+
+        # Model obyektini yaratib, xashlangan parolni saqlaymiz
+        user = User.objects.create(**validated_data, password=hashed_password)
+        return user
+
+
+class VerifyPhoneSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['phone_number', 'verification_code']
+        extra_kwargs = {'verification_code': {'write_only': True}}

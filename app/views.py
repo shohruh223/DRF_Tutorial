@@ -1,37 +1,32 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from twilio.rest import Client
+from rest_framework.generics import CreateAPIView
+from datetime import timedelta
+from django.utils import timezone
+from app.serializer import RegisterUserSerializer, VerifyPhoneSerializer
+from app.utils import generate_verification_code, send_sms
 
 
-class SendSMSView(APIView):
-    def post(self, request, format=None):
-        account_sid = ''
-        auth_token = ''
-        from_number = '' # Twilio tomonidan berilgan raqam
-        to_number = request.data.get('to_number', None) # POST so'rovdan kelgan raqam
-        message = request.data.get('message', None) # POST so'rovdan kelgan xabar
+class RegisterView(CreateAPIView):
+    serializer_class = RegisterUserSerializer
 
-        if not to_number or not message:
-            return Response(
-                {'error': 'to_number va message bo\'sh bo\'lishi mumkin emas.'},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+    def perform_create(self, serializer):
+        phone_number = serializer.validated_data['phone_number']
+        verification_code = generate_verification_code()
+        expiration_time = timezone.now() + timedelta(minutes=1)
+        serializer.save(verification_code=verification_code,
+                        activation_key_expires=expiration_time)
+        send_sms(body=f"Tasdiqlash kodi: {verification_code}",
+                 number=phone_number)
 
-        client = Client(account_sid, auth_token)
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        response.data['message'] = "Tasdiqlash kodi yuborildi. Iltimos sms orqali tasdiqlab yuboring"
+        return response
 
-        try:
-            message = client.messages.create(
-                body=message,
-                from_=from_number,
-                to=to_number
-            )
-            return Response(
-                {'success': 'Xabar yuborildi.', 'message_id': message.sid},
-                status=status.HTTP_200_OK
-            )
-        except Exception as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+
+class VerifyPhoneView(CreateAPIView):
+    serializer_class = VerifyPhoneSerializer
+
+    def post(self, request, *args, **kwargs):
+        phone_number = request.data.get('phone_number')
+        verification_code = request.data.get('verification_code')
+
