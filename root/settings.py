@@ -26,10 +26,20 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
     'app.apps.AppConfig',
 
     'rest_framework',
+    'rest_framework.authtoken',
     'drf_yasg',
+
+    'dj_rest_auth',
+    'dj_rest_auth.registration',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+
+    'allauth.socialaccount.providers.google',
 ]
 
 MIDDLEWARE = [
@@ -142,3 +152,33 @@ SWAGGER_SETTINGS = {
 }
 
 
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
+SITE_ID = 1
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'shohruh.abd0823@gmail.com'
+EMAIL_HOST_PASSWORD = 'ekrvxavefheevvgu'  # os.environ['password_key'] suggested
+EMAIL_USE_TLS = True
+
+
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        # For each OAuth based provider, either add a ``SocialApp``
+        # (``socialaccount`` app) containing the required client
+        # credentials, or list them here:
+        'APP': {
+            'client_id': '856489160437-5qt856hfkjjo0gl7e6vaslobtphrdvh7.apps.googleusercontent.com',
+            'secret': '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',
+            'key': ''
+        }
+    }
+}
