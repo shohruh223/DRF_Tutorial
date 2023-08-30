@@ -166,3 +166,9 @@ EMAIL_PORT = 587
 EMAIL_HOST_USER = 'shohruh.abd0823@gmail.com'
 EMAIL_HOST_PASSWORD = 'ekrvxavefheevvgu'  # os.environ['password_key'] suggested
 EMAIL_USE_TLS = True
+
+
+AUTHENTICATION_BACKENDS = [
+    'app.backend.CustomBackend',  # Replace with your backend path
+    # ...
+]
