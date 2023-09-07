@@ -20,7 +20,7 @@ class RegisterModelSerializer(serializers.ModelSerializer):
 
 
 class LoginModelSerializer(serializers.ModelSerializer):
-    email = serializers.CharField()
+    email = serializers.EmailField()
     password = serializers.CharField(write_only=True)
 
     class Meta:
