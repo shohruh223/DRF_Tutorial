@@ -1,10 +1,9 @@
-from django.urls import path, include
+from django.urls import path
 from app.views.change_password_view import ChangePasswordView
 from app.views.forgot_password_view import ForgotPasswordView
+from app.views.login_view import LoginAPIView
 from app.views.register_view import RegisterAndVerifyEmailView
 from app.views.verify_view import VerifyRegisterEmailView, VerifyForgotEmailView
-from rest_framework.authtoken.views import obtain_auth_token
-
 
 # router = DefaultRouter()
 # router.register(prefix="product",
@@ -14,7 +13,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 urlpatterns = [
     # path('', include(router.urls)),
     path('register/', RegisterAndVerifyEmailView.as_view(), name='register'),
-    path('login/', obtain_auth_token, name='login'),
+    path('login/', LoginAPIView.as_view(), name='login'),
     path('verify-register-email/', VerifyRegisterEmailView.as_view(), name='verify-register-email'),
     path('verify-forgot-email/', VerifyForgotEmailView.as_view(), name='verify-register-email'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
