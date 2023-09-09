@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework.generics import CreateAPIView
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
 from app.models import User
 from app.serializers import VerifyUserSerializer, ForgotChangeUserModelSerializer
 
@@ -43,7 +42,7 @@ class VerifyForgotEmailView(APIView):
         responses={
             status.HTTP_200_OK: "Email tasdiqlandi.",
             status.HTTP_400_BAD_REQUEST: "Tasdiqlash kod muddati tugagan yoki noto'g'ri tasdiqlash kod.",
-            status.HTTP_400_BAD_REQUEST: "Noto'g'ri tasdiqlash kod yoki email.",
+            status.HTTP_404_NOT_FOUND: "Noto'g'ri tasdiqlash kod yoki email.",
         },
     )
     def post(self, request, *args, **kwargs):
@@ -62,9 +61,10 @@ class VerifyForgotEmailView(APIView):
                                     status=status.HTTP_400_BAD_REQUEST)
                 else:
                     user.set_password(new_password)
-                    user.is_active = True
+                    # user.is_active = True
                     user.save()
-                    return Response({'message': 'Email tasdiqlandi.'}, status=status.HTTP_200_OK)
+                    return Response(data={'message': "Email tasdiqlandi va parol o'zgardi"},
+                                    status=status.HTTP_200_OK)
             elif user.activation_key_expires < timezone.now() or user.verification_code != verification_code:
                 return Response({'message': 'Tasdiqlash kod muddati tugagan yoki noto\'g\'ri tasdiqlash kod.'},
                                 status=status.HTTP_400_BAD_REQUEST)

@@ -1,3 +1,5 @@
+from datetime import timedelta
+from django.utils import timezone
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.response import Response
@@ -20,7 +22,9 @@ class ForgotPasswordView(APIView):
         email = request.data.get('email')
         try:
             user = User.objects.get(email=email)
+            expiration_time = timezone.now() + timedelta(minutes=1)
             verification_code = generate_verification_code()
+            user.activation_key_expires = expiration_time
             user.verification_code = verification_code
             user.save()
             # Emailga tasdiqlash kodi jo'natish
